@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+
+# Secrets (API keys); commit .env.example instead
+.env
+.env.*
+!.env.example
+
+# Local Claude Code settings (per machine)
+.claude/settings.local.json
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
