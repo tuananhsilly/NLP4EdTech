@@ -41,6 +41,8 @@ FRAC_11_32 = "<m:mfrac><m:mn>11</m:mn><m:mn>32</m:mn></m:mfrac>"
         (f"<m:mfrac>{FRAC_11_32}<m:mn>2</m:mn></m:mfrac>", "(11/32)/2"),
         # mixed number: a number directly followed by a fraction
         ("<m:mrow><m:mn>2</m:mn><m:mfrac><m:mn>3</m:mn><m:mn>4</m:mn></m:mfrac></m:mrow>", "2 3/4"),
+        # ... also in general notation, a b/c (found on real data: rendered "ab/c")
+        ("<m:mrow><m:mi>a</m:mi><m:mfrac><m:mi>b</m:mi><m:mi>c</m:mi></m:mfrac></m:mrow>", "a b/c"),
         # ... but not when an operator is between them
         (
             "<m:mrow><m:mn>2</m:mn><m:mo>⋅</m:mo><m:mfrac><m:mn>3</m:mn><m:mn>4</m:mn></m:mfrac></m:mrow>",

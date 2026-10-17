@@ -95,8 +95,8 @@ def _render_row(tokens: list[Token]) -> str:
             continue
         if kind == "op":
             parts.append(text if _is_unary(tokens, i) else f" {text} ")
-        elif kind == "fraction" and previous == "number":
-            parts.append(" " + text)  # mixed number: 2 3/4
+        elif kind == "fraction" and previous in ("number", "operand"):
+            parts.append(" " + text)  # mixed number: 2 3/4, or a b/c in general notation
         elif kind == "punct" and text in (",", ";", ":"):
             parts.append(text + " ")
         else:
