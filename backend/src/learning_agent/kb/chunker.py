@@ -12,7 +12,7 @@ sections are not knowledge-base content (R2-D1) and are skipped.
 
 Chunks out of scope are kept and flagged (R2-D3), so the report can show what was dropped and
 why: the module is `out`, the section is excluded in the manifest, or the chunk uses negative
-numbers or variables (G1: positive fractions only).
+numbers, or is a worked example with variables (G1: positive fractions only; RV1).
 Chunk ids are "<module id>:<element id>" (R2-D5), stable for the pinned source commit.
 """
 
@@ -93,7 +93,7 @@ class _ModuleChunker:
         text = "\n".join(text_lines).strip()
         if not text:
             return
-        reason = self._scope_reason(text, elements, excluded)
+        reason = self._scope_reason(doc_type, text, elements, excluded)
         self.chunks.append(
             Chunk(
                 id=f"{self.module.id}:{source_id}",
@@ -107,7 +107,7 @@ class _ModuleChunker:
         )
 
     def _scope_reason(
-        self, text: str, elements: list[ET.Element], excluded: bool
+        self, doc_type: DocType, text: str, elements: list[ET.Element], excluded: bool
     ) -> ScopeReason | None:
         if self.module.scope == "out":
             return "module_out"
@@ -116,7 +116,9 @@ class _ModuleChunker:
         maths = [m for e in elements for m in e.iter(MATHML + "math")]
         if any(has_negative(m) for m in maths) or _NEGATIVE_WORDS.search(text):
             return "negative_numbers"
-        if any(has_variable(m) for m in maths):
+        # RV1: only worked examples are algebra when they use letters; definitions, rules and
+        # explanations use letters as general notation (a/c + b/c = (a + b)/c) and stay in scope.
+        if doc_type == "worked_example" and any(has_variable(m) for m in maths):
             return "variables"
         return None
 

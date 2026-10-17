@@ -58,6 +58,11 @@ DOC = f"""<document {NS}>
    <solution id="ex3s"><para id="ex3sp">It is already simplified.</para></solution>
   </exercise></example>
  </section>
+ <section id="s4"><title>Fraction Addition</title>
+  <para id="p5">If <m:math><m:mi>c</m:mi><m:mo>≠</m:mo><m:mn>0</m:mn></m:math>, then
+   <m:math><m:mrow><m:mfrac><m:mi>a</m:mi><m:mi>c</m:mi></m:mfrac><m:mo>+</m:mo>
+   <m:mfrac><m:mi>b</m:mi><m:mi>c</m:mi></m:mfrac></m:mrow></m:math> adds the numerators.</para>
+ </section>
  <section id="s3"><title>Simplify Complex Fractions</title>
   <para id="p4">A complex fraction has a fraction in the numerator or denominator.</para>
  </section>
@@ -70,7 +75,10 @@ DOC = f"""<document {NS}>
 </content>
 <glossary><definition id="d1"><term>mixed number</term>
  <meaning id="d1m">A mixed number consists of a whole number and a proper fraction.</meaning>
-</definition></glossary>
+</definition>
+<definition id="d2"><term>reciprocal</term><meaning id="d2m">The reciprocal of
+ <m:math><m:mfrac><m:mi>a</m:mi><m:mi>b</m:mi></m:mfrac></m:math> is
+ <m:math><m:mfrac><m:mi>b</m:mi><m:mi>a</m:mi></m:mfrac></m:math>.</meaning></definition></glossary>
 </document>"""
 
 MODULE = ModuleEntry(
@@ -106,7 +114,9 @@ def test_block_types_and_ids() -> None:
         "m1:ex3": "worked_example",
         "m1:p4": "theory",
         "m1:kc": "key_concepts",
+        "m1:p5": "theory",
         "m1:d1": "definition",
+        "m1:d2": "definition",
     }
 
 
@@ -193,6 +203,9 @@ def test_theory_is_split_at_paragraph_boundaries_when_too_long() -> None:
         ("m1:ex3", False, "variables"),  # y/6
         ("m1:p4", False, "excluded_section"),  # listed in exclude_sections
         ("m1:d1", True, None),
+        # RV1: letters as general notation are allowed outside worked examples
+        ("m1:p5", True, None),
+        ("m1:d2", True, None),
     ],
 )
 def test_scope_flags(chunk_id: str, in_scope: bool, reason: str | None) -> None:
