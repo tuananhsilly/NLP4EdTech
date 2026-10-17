@@ -1,0 +1,79 @@
+# Skill graph for the fractions strand, grades 4-6 (07 §6.2).
+# Draft 2026-10-17 for the M6a RAG demo: used to tag KB chunks and filter retrieval.
+#
+# - `prerequisites` lists skills that must come before this one; the graph must be acyclic.
+# - Order in this file is the tie-breaker for topological order (keep roots first).
+# - `grade` is a draft based on the GDPT 2018 overview in 04 §12.1; the official
+#   learning outcomes are not checked yet (Q9), so `gdpt_ref` and `ccss_ref` stay empty.
+
+skills:
+  - id: frac.concept
+    name_vi: Khái niệm phân số
+    name_en: Meaning of fractions
+    grade: 4
+
+  - id: frac.equivalent
+    name_vi: Phân số bằng nhau
+    name_en: Equivalent fractions
+    grade: 4
+    prerequisites: [frac.concept]
+
+  - id: frac.simplify
+    name_vi: Rút gọn phân số
+    name_en: Simplify fractions
+    grade: 4
+    prerequisites: [frac.equivalent]
+
+  - id: frac.common_den
+    name_vi: Quy đồng mẫu số các phân số
+    name_en: Common denominators
+    grade: 4
+    prerequisites: [frac.equivalent]
+
+  - id: frac.compare
+    name_vi: So sánh và sắp xếp phân số
+    name_en: Compare and order fractions
+    grade: 4
+    prerequisites: [frac.common_den]
+
+  - id: frac.add_sub.like_den
+    name_vi: Cộng, trừ phân số cùng mẫu số
+    name_en: Add and subtract fractions with like denominators
+    grade: 4
+    prerequisites: [frac.concept]
+
+  - id: frac.add_sub.unlike_den
+    name_vi: Cộng, trừ phân số khác mẫu số
+    name_en: Add and subtract fractions with unlike denominators
+    grade: 4
+    prerequisites: [frac.add_sub.like_den, frac.common_den]
+
+  - id: frac.mul
+    name_vi: Nhân phân số
+    name_en: Multiply fractions
+    grade: 4
+    prerequisites: [frac.concept]
+
+  - id: frac.div
+    name_vi: Chia phân số
+    name_en: Divide fractions
+    grade: 4
+    prerequisites: [frac.mul]
+
+  - id: frac.mixed
+    name_vi: Hỗn số; đổi hỗn số và phân số
+    name_en: Mixed numbers and improper fractions
+    grade: 5
+    prerequisites: [frac.concept]
+
+  - id: frac.mixed.ops
+    name_vi: Cộng, trừ, nhân, chia hỗn số
+    name_en: Operations with mixed numbers
+    grade: 6
+    prerequisites: [frac.mixed, frac.add_sub.unlike_den, frac.div]
+
+  - id: frac.decimal
+    name_vi: Phân số và số thập phân
+    name_en: Fractions and decimals
+    grade: 5
+    prerequisites: [frac.equivalent]

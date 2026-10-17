@@ -1,0 +1,102 @@
+# English -> Vietnamese glossary for the fractions strand (04 §12.1, 07 §6.2).
+# Draft 2026-10-17, pending review by the thesis author.
+#
+# - `vi` is the term used in Vietnamese primary/lower-secondary textbooks.
+# - `forbidden_vi` lists wrong or out-of-level translations that generated Vietnamese text
+#   must not use (checked by `Glossary.forbidden_found`).
+# - `skill_id` is set when the term belongs to one skill; general terms leave it empty.
+
+terms:
+  # --- general ---
+  - en: fraction
+    vi: phân số
+    forbidden_vi: [phân thức]            # algebraic fraction, grade 8
+  - en: numerator
+    vi: tử số
+    forbidden_vi: [tử thức]              # numerator of an algebraic fraction
+  - en: denominator
+    vi: mẫu số
+    forbidden_vi: [mẫu thức]             # denominator of an algebraic fraction
+  - en: whole number
+    vi: số tự nhiên
+  - en: number line
+    vi: tia số                           # grades 4-5; grade 6 uses "trục số"
+  - en: sum
+    vi: tổng
+  - en: difference
+    vi: hiệu
+  - en: product
+    vi: tích
+  - en: quotient
+    vi: thương
+
+  # --- equivalence, simplifying, common denominators ---
+  - en: equivalent fractions
+    vi: phân số bằng nhau
+    skill_id: frac.equivalent
+    forbidden_vi: [phân số tương đương]  # literal translation, not textbook usage
+  - en: simplify
+    vi: rút gọn
+    skill_id: frac.simplify
+    forbidden_vi: [đơn giản hóa]
+  - en: simplest form
+    vi: phân số tối giản
+    skill_id: frac.simplify
+  - en: common factor
+    vi: ước chung
+    skill_id: frac.simplify
+  - en: greatest common factor
+    vi: ước chung lớn nhất
+    skill_id: frac.simplify
+  - en: common denominator
+    vi: mẫu số chung
+    skill_id: frac.common_den
+  - en: least common denominator
+    vi: mẫu số chung nhỏ nhất
+    skill_id: frac.common_den
+  - en: least common multiple
+    vi: bội chung nhỏ nhất
+    skill_id: frac.common_den
+
+  # --- comparing ---
+  - en: compare
+    vi: so sánh
+    skill_id: frac.compare
+  - en: order
+    vi: sắp xếp theo thứ tự
+    skill_id: frac.compare
+
+  # --- operations ---
+  - en: like denominators
+    vi: cùng mẫu số
+    skill_id: frac.add_sub.like_den
+  - en: unlike denominators
+    vi: khác mẫu số
+    skill_id: frac.add_sub.unlike_den
+  - en: reciprocal
+    vi: phân số đảo ngược
+    skill_id: frac.div
+    forbidden_vi: [số đối]               # "số đối" means additive inverse (opposite)
+
+  # --- mixed numbers ---
+  - en: mixed number
+    vi: hỗn số
+    skill_id: frac.mixed
+    forbidden_vi: [số hỗn hợp]           # literal translation
+  - en: improper fraction
+    vi: phân số có tử số lớn hơn hoặc bằng mẫu số
+    skill_id: frac.mixed
+  - en: proper fraction
+    vi: phân số bé hơn 1
+    skill_id: frac.mixed
+
+  # --- decimals ---
+  - en: decimal
+    vi: số thập phân
+    skill_id: frac.decimal
+  - en: terminating decimal
+    vi: số thập phân hữu hạn
+    skill_id: frac.decimal
+  - en: repeating decimal
+    vi: số thập phân vô hạn tuần hoàn
+    skill_id: frac.decimal
