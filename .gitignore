@@ -13,6 +13,8 @@ __pycache__/
 
 # Raw source documents (licensed third-party content); commit only the manifest
 data/sources/
+# Derived from the sources above and rebuilt by `python -m learning_agent.kb.chunk`
+data/build/
 
 # Local Claude Code settings (per machine)
 .claude/settings.local.json
