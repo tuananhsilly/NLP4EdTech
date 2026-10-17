@@ -3,13 +3,17 @@ name = "learning-agent"
 version = "0.1.0"
 description = "Adaptive fraction-practice learning agent (thesis prototype)"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "pydantic>=2.14.1",
+    "pyyaml>=6.0.3",
+]
 
 [dependency-groups]
 dev = [
     "pyright[nodejs]>=1.1.414",
     "pytest>=9.1.1",
     "ruff>=0.17.0",
+    "types-pyyaml>=6.0.12.20260906",
 ]
 
 [build-system]
