@@ -1,0 +1,70 @@
+# Source manifest for the knowledge base (KB).
+# Raw files live in data/sources/ (git-ignored); fetch them with scripts/fetch_sources.sh.
+# Every field below was read from the source itself on the retrieval date, unless marked otherwise.
+
+sources:
+  - id: openstax-prealgebra-2e
+    title: Prealgebra 2e
+    publisher: OpenStax, Rice University
+    edition: 2e
+    language: en
+    collection_id: col30939              # META-INF/books.xml
+    book_url: https://openstax.org/details/books/prealgebra-2e   # from README.md
+    license: CC BY-NC-SA 4.0             # LICENSE, README.md, <md:license> in the collection file
+    license_url: http://creativecommons.org/licenses/by-nc-sa/4.0/
+    # The repository provides no ready-made attribution sentence. This one is built from the
+    # elements CC BY-NC-SA 4.0 requires (title, publisher, license, link) and must be shown with
+    # every citation in the UI.
+    attribution: >-
+      Content adapted from "Prealgebra 2e" by OpenStax, Rice University,
+      licensed under CC BY-NC-SA 4.0. https://openstax.org/details/books/prealgebra-2e
+    repo_url: https://github.com/openstax/osbooks-prealgebra-bundle
+    commit: 38cae454e644abf9f0a623e876994553881597c9   # committed 2026-06-29T23:52:34Z
+    retrieved_at: 2026-10-17
+    format: CNXML + MathML
+
+    files:
+      LICENSE: ab1a44bbba58252630134574d7b2534813339240eb645825ffcc2487dbe8114a
+      collections/prealgebra-2e.collection.xml: 309fa072672372d1e46d52031167c21d9a120d1cdfdf3001548e1ca2975077a2
+
+    # scope: in = whole module is within grades 4-6; partial = drop the listed sections;
+    # out = drop the whole module. Proposed on 2026-10-17, pending review.
+    modules:
+      - {id: m81284, section: "4.0", title: Introduction to Fractions, scope: in,
+         sha256: 61467075d7fe6213af1710f6f4a6b685fc4e281430612b007e98fcfb1145c500}
+      - {id: m81285, section: "4.1", title: Visualize Fractions, scope: in,
+         sha256: 7a39fccee8a29712929f04a6ac02f4e2646e46a6920f6e8b06f56de40b7ffad4}
+      - {id: m81286, section: "4.2", title: Multiply and Divide Fractions, scope: in,
+         sha256: 7dab4be4d267ccd47f23df46e9b6a4b90a25c5d8b371e14b5947846af126b249}
+      - id: m81287
+        section: "4.3"
+        title: Multiply and Divide Mixed Numbers and Complex Fractions
+        scope: partial
+        exclude_sections:
+          - Translate Phrases to Expressions with Fractions   # algebraic expressions
+          - Simplify Complex Fractions                        # beyond grade 6
+          - Simplify Expressions with a Fraction Bar          # beyond grade 6
+        sha256: 4a029d82953fcba05aeec289445bc21ffc3364ce68b866c56404de3785d4d076
+      - {id: m81288, section: "4.4", title: Add and Subtract Fractions with Common Denominators,
+         scope: in, sha256: 4eb4a0c85c70a9e1a10fa4a5d99dabfb9ccc14b70de18d7cbefb820764c0ae90}
+      - id: m81289
+        section: "4.5"
+        title: Add and Subtract Fractions with Different Denominators
+        scope: partial
+        exclude_sections:
+          - Use the Order of Operations to Simplify Complex Fractions   # beyond grade 6
+          - Evaluate Variable Expressions with Fractions                 # variables
+        sha256: bfaa71d9e1dcfa775dd6525ba2fbc9ecf0ce17e6833d8dcaca9bb2f259361fa3
+      - {id: m81290, section: "4.6", title: Add and Subtract Mixed Numbers, scope: in,
+         sha256: 96985df586080ae5e52b870320d310a6061a0c00c5d1699e58a024e55bdba005}
+      - {id: m81291, section: "4.7", title: Solve Equations with Fractions, scope: out,
+         note: all examples are equations with variables,
+         sha256: 729ab266737111c7cdd795ca6ddd887c41a9efcb2e802ab6ae46adfe3c13a195}
+      - id: m81298
+        section: "5.3"
+        title: Decimals and Fractions
+        scope: partial
+        exclude_sections:
+          - Find the Circumference and Area of Circles   # geometry, not fractions
+          - Approximate π                                # title contains MathML in the source
+        sha256: a8105d6d162b071c7365bd74a48737cf4175ce1c7b14afbee4f3bcf472631d81

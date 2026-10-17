@@ -11,6 +11,9 @@ __pycache__/
 .env.*
 !.env.example
 
+# Raw source documents (licensed third-party content); commit only the manifest
+data/sources/
+
 # Local Claude Code settings (per machine)
 .claude/settings.local.json
 
