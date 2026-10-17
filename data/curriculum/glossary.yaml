@@ -45,9 +45,6 @@ terms:
   - en: common factor
     vi: ước chung
     skill_id: frac.simplify
-  - en: greatest common factor
-    vi: ước chung lớn nhất
-    skill_id: frac.simplify
   - en: common denominator
     vi: mẫu số chung
     skill_id: frac.common_den
@@ -93,9 +90,6 @@ terms:
   # --- decimals ---
   - en: decimal
     vi: số thập phân
-    skill_id: frac.decimal
-  - en: terminating decimal
-    vi: số thập phân hữu hạn
     skill_id: frac.decimal
   - en: repeating decimal
     vi: số thập phân vô hạn tuần hoàn
