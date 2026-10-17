@@ -24,10 +24,8 @@ FRACTION = GlossaryTerm(en="fraction", vi="phân số", forbidden_vi=("phân th�
 def graph() -> SkillGraph:
     return SkillGraph(
         [
-            Skill(id="frac.concept", name_vi="x", name_en="x", grade=4),
-            Skill(
-                id="frac.mixed", name_vi="x", name_en="x", grade=5, prerequisites=("frac.concept",)
-            ),
+            Skill(id="frac.concept", name_vi="x", name_en="x"),
+            Skill(id="frac.mixed", name_vi="x", name_en="x", prerequisites=("frac.concept",)),
         ]
     )
 

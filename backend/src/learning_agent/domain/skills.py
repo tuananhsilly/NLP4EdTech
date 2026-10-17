@@ -18,15 +18,18 @@ SkillId = Annotated[str, Field(pattern=r"^frac(\.[a-z][a-z_]*)+$")]
 
 
 class Skill(BaseModel):
+    """One skill of the fractions strand, named after sections of Prealgebra 2e (ADR-15).
+
+    There is deliberately no grade or external curriculum code (ADR-15); grade scope is
+    controlled by which book sections are ingested (data/source_manifest.yaml).
+    """
+
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     id: SkillId
     name_vi: str = Field(min_length=1)
     name_en: str = Field(min_length=1)
-    grade: int = Field(ge=4, le=6)
     prerequisites: tuple[SkillId, ...] = ()
-    gdpt_ref: str | None = None
-    ccss_ref: str | None = None
 
 
 class _SkillsFile(BaseModel):

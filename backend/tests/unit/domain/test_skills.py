@@ -8,14 +8,8 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 SKILLS_FILE = REPO_ROOT / "data" / "curriculum" / "skills.yaml"
 
 
-def skill(skill_id: str, *prerequisites: str, grade: int = 4) -> Skill:
-    return Skill(
-        id=skill_id,
-        name_vi=skill_id,
-        name_en=skill_id,
-        grade=grade,
-        prerequisites=prerequisites,
-    )
+def skill(skill_id: str, *prerequisites: str) -> Skill:
+    return Skill(id=skill_id, name_vi=skill_id, name_en=skill_id, prerequisites=prerequisites)
 
 
 # --- topological order -------------------------------------------------------------------
@@ -112,10 +106,16 @@ def test_invalid_skill_id_is_rejected(bad_id: str) -> None:
         skill(bad_id)
 
 
-@pytest.mark.parametrize("grade", [3, 7])
-def test_grade_out_of_range_is_rejected(grade: int) -> None:
-    with pytest.raises(ValueError):
-        skill("frac.a", grade=grade)
+@pytest.mark.parametrize("field", ["grade", "gdpt_ref", "ccss_ref"])
+def test_fields_dropped_by_adr15_are_rejected(tmp_path: Path, field: str) -> None:
+    # ADR-15: skills carry no grade or external curriculum reference; extra="forbid" keeps
+    # them from silently coming back through the YAML file.
+    path = tmp_path / "skills.yaml"
+    path.write_text(
+        f"skills:\n  - {{id: frac.a, name_vi: A, name_en: A, {field}: x}}\n", encoding="utf-8"
+    )
+    with pytest.raises(CurriculumError, match=field):
+        load_skills(path)
 
 
 # --- loading from YAML -------------------------------------------------------------------
@@ -125,13 +125,13 @@ def test_load_skills_reads_yaml(tmp_path: Path) -> None:
     path = tmp_path / "skills.yaml"
     path.write_text(
         "skills:\n"
-        "  - {id: frac.a, name_vi: A, name_en: A, grade: 4}\n"
-        "  - {id: frac.b, name_vi: B, name_en: B, grade: 5, prerequisites: [frac.a]}\n",
+        "  - {id: frac.a, name_vi: A, name_en: A}\n"
+        "  - {id: frac.b, name_vi: B, name_en: B Skill, prerequisites: [frac.a]}\n",
         encoding="utf-8",
     )
     graph = load_skills(path)
     assert graph.prerequisites("frac.b") == ("frac.a",)
-    assert graph.get("frac.b").grade == 5
+    assert graph.get("frac.b").name_en == "B Skill"
     assert "frac.a" in graph
     assert len(graph) == 2
 
@@ -139,7 +139,7 @@ def test_load_skills_reads_yaml(tmp_path: Path) -> None:
 def test_load_skills_rejects_unknown_field(tmp_path: Path) -> None:
     path = tmp_path / "skills.yaml"
     path.write_text(
-        "skills:\n  - {id: frac.a, name_vi: A, name_en: A, grade: 4, level: 2}\n", encoding="utf-8"
+        "skills:\n  - {id: frac.a, name_vi: A, name_en: A, level: 2}\n", encoding="utf-8"
     )
     with pytest.raises(CurriculumError, match="level"):
         load_skills(path)
