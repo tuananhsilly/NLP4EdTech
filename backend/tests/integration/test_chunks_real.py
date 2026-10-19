@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from learning_agent.domain import load_skills
 from learning_agent.kb.chunk import (
     DEFAULT_MANIFEST,
     DEFAULT_SOURCES,
@@ -13,6 +14,12 @@ from learning_agent.kb.chunk import (
 )
 from learning_agent.kb.chunker import Chunk
 from learning_agent.kb.manifest import load_manifest
+from learning_agent.kb.skill_map import (
+    DEFAULT_SKILL_MAP,
+    DEFAULT_SKILLS,
+    assign_skills,
+    load_skill_map,
+)
 
 MANIFEST = load_manifest(DEFAULT_MANIFEST)
 
@@ -71,6 +78,14 @@ def test_chunks_of_excluded_topics_outside_sections_are_out_of_scope(
     # R3-D1: glossary terms and Key Concepts sit outside the sections listed in exclude_sections
     chunk = next(c for c in chunks if c.id == chunk_id)
     assert chunk.scope_reason == "excluded_section"
+
+
+def test_every_in_scope_chunk_has_a_skill_and_every_map_entry_is_used(
+    chunks: list[Chunk],
+) -> None:
+    skill_map = load_skill_map(DEFAULT_SKILL_MAP, load_skills(DEFAULT_SKILLS))
+    assigned = assign_skills(chunks, skill_map)  # raises on either problem
+    assert set(assigned) == {c.id for c in chunks if c.in_scope}
 
 
 def test_jsonl_round_trip(chunks: list[Chunk], tmp_path: Path) -> None:

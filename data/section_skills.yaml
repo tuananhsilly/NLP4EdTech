@@ -1,0 +1,78 @@
+# Book section -> skills of data/curriculum/skills.yaml, for chunk_skill (M6a R3, R3-D2).
+#
+# Every in-scope chunk gets the skills of its (module, section). Glossary definitions are
+# mapped one by one under `chunks:` (one term each), and that entry wins over the section.
+# Loading fails if an in-scope chunk gets no skill or an entry matches no in-scope chunk,
+# so this file must change together with data/source_manifest.yaml.
+# Rows are written by hand (chunk_skill.tagged_by = 'human').
+
+sections:
+  # 4.0 Introduction to Fractions (the module title is the section of its intro text)
+  - {module: m81284, section: Introduction to Fractions, skills: [frac.concept]}
+
+  # 4.1 Visualize Fractions
+  - {module: m81285, section: Understand the Meaning of Fractions, skills: [frac.concept]}
+  - {module: m81285, section: Model Improper Fractions and Mixed Numbers, skills: [frac.mixed]}
+  - {module: m81285, section: Convert between Improper Fractions and Mixed Numbers,
+     skills: [frac.mixed]}
+  - {module: m81285, section: Model Equivalent Fractions, skills: [frac.equivalent]}
+  - {module: m81285, section: Find Equivalent Fractions, skills: [frac.equivalent]}
+  - {module: m81285, section: Locate Fractions and Mixed Numbers on the Number Line,
+     skills: [frac.concept, frac.mixed]}
+  - {module: m81285, section: Order Fractions and Mixed Numbers, skills: [frac.compare]}
+  - {module: m81285, section: Key Concepts, skills: [frac.equivalent, frac.mixed]}
+
+  # 4.2 Multiply and Divide Fractions
+  - {module: m81286, section: Simplify Fractions, skills: [frac.simplify]}
+  - {module: m81286, section: Multiply Fractions, skills: [frac.mul]}
+  - {module: m81286, section: Divide Fractions, skills: [frac.div]}
+
+  # 4.3 Multiply and Divide Mixed Numbers and Complex Fractions (partial)
+  - {module: m81287, section: Multiply and Divide Mixed Numbers, skills: [frac.mixed.ops]}
+
+  # 4.4 Add and Subtract Fractions with Common Denominators
+  - {module: m81288, section: Model Fraction Addition, skills: [frac.add_sub.like_den]}
+  - {module: m81288, section: Add Fractions with a Common Denominator,
+     skills: [frac.add_sub.like_den]}
+  - {module: m81288, section: Model Fraction Subtraction, skills: [frac.add_sub.like_den]}
+  - {module: m81288, section: Subtract Fractions with a Common Denominator,
+     skills: [frac.add_sub.like_den]}
+  - {module: m81288, section: Key Concepts, skills: [frac.add_sub.like_den]}
+
+  # 4.5 Add and Subtract Fractions with Different Denominators (partial)
+  - {module: m81289, section: Find the Least Common Denominator, skills: [frac.common_den]}
+  - {module: m81289, section: Convert Fractions to Equivalent Fractions with the LCD,
+     skills: [frac.common_den]}
+  - {module: m81289, section: Add and Subtract Fractions with Different Denominators,
+     skills: [frac.add_sub.unlike_den]}
+  - {module: m81289, section: Identify and Use Fraction Operations,
+     skills: [frac.add_sub.unlike_den, frac.mul, frac.div]}
+  - {module: m81289, section: Key Concepts, skills: [frac.common_den, frac.add_sub.unlike_den]}
+
+  # 4.6 Add and Subtract Mixed Numbers
+  - {module: m81290, section: Model Addition of Mixed Numbers with a Common Denominator,
+     skills: [frac.mixed.ops]}
+  - {module: m81290, section: Add Mixed Numbers, skills: [frac.mixed.ops]}
+  - {module: m81290, section: Model Subtraction of Mixed Numbers, skills: [frac.mixed.ops]}
+  - {module: m81290, section: Subtract Mixed Numbers with a Common Denominator,
+     skills: [frac.mixed.ops]}
+  - {module: m81290, section: Add and Subtract Mixed Numbers with Different Denominators,
+     skills: [frac.mixed.ops]}
+  - {module: m81290, section: Key Concepts, skills: [frac.mixed.ops]}
+
+  # 5.3 Decimals and Fractions (partial; its Key Concepts chunk is excluded in the manifest)
+  - {module: m81298, section: Convert Fractions to Decimals, skills: [frac.decimal]}
+  - {module: m81298, section: Order Decimals and Fractions, skills: [frac.decimal, frac.compare]}
+  - {module: m81298, section: Repeating Decimals, skills: [frac.decimal]}
+  - {module: m81298, section: Simplify Expressions Using the Order of Operations,
+     skills: [frac.decimal]}
+
+chunks:
+  m81285:fs-id2715365: [frac.concept]          # fraction
+  m81285:fs-id2849922: [frac.equivalent]       # equivalent fractions
+  m81285:fs-id2435034: [frac.mixed]            # mixed number
+  m81285:fs-id1931973: [frac.mixed]            # proper and improper fractions
+  m81286:fs-id2946118: [frac.div]              # reciprocal
+  m81286:fs-id1170326339386: [frac.simplify]   # simplified fraction
+  m81289:fs-id2483777: [frac.common_den]       # least common denominator (LCD)
+  m81298:fs-id1475111: [frac.decimal]          # repeating decimal
