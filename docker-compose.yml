@@ -1,0 +1,25 @@
+# Local Postgres with pgvector for the knowledge base (M6a, ADR-11).
+#   docker compose up -d      start in the background (data persists in the `pgdata` volume)
+#   docker compose down       stop, keep the data
+#   docker compose down -v    stop and DELETE the data
+name: learning-agent
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg17 # pgvector 0.8.7 on Postgres 17; pinned, never `latest`
+    environment:
+      POSTGRES_USER: learning_agent
+      POSTGRES_DB: learning_agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (see .env.example)}
+    ports:
+      - "127.0.0.1:5432:5432" # this machine only; a bare "5432:5432" opens it to the network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learning_agent -d learning_agent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
