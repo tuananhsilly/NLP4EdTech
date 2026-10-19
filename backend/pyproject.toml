@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Adaptive fraction-practice learning agent (thesis prototype)"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "psycopg[binary]>=3.3.6",
     "pydantic>=2.14.1",
     "pyyaml>=6.0.3",
 ]
