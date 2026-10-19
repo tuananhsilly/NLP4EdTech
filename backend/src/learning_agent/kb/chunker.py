@@ -11,8 +11,9 @@ Try It notes, "Be Prepared" notes, media links, manipulative activities and the 
 sections are not knowledge-base content (R2-D1) and are skipped.
 
 Chunks out of scope are kept and flagged (R2-D3), so the report can show what was dropped and
-why: the module is `out`, the section is excluded in the manifest, or the chunk uses negative
-numbers, or is a worked example with variables (G1: positive fractions only; RV1).
+why: the module is `out`, the section or the chunk itself is excluded in the manifest, or the
+chunk uses negative numbers, or is a worked example with variables (G1: positive fractions
+only; RV1).
 Chunk ids are "<module id>:<element id>" (R2-D5), stable for the pinned source commit.
 """
 
@@ -93,6 +94,7 @@ class _ModuleChunker:
         text = "\n".join(text_lines).strip()
         if not text:
             return
+        excluded = excluded or source_id in self.module.exclude_chunks
         reason = self._scope_reason(doc_type, text, elements, excluded)
         self.chunks.append(
             Chunk(
@@ -219,4 +221,8 @@ def chunk_module(root: ET.Element, module: ModuleEntry, *, max_words: int = 250)
     glossary = root.find(CNXML + "glossary")
     if glossary is not None:
         chunker.glossary(glossary)
+    found = {c.id.removeprefix(f"{module.id}:") for c in chunker.chunks}
+    unmatched = [i for i in module.exclude_chunks if i not in found]
+    if unmatched:
+        raise ValueError(f"{module.id}: exclude_chunks match no chunk: {unmatched}")
     return chunker.chunks

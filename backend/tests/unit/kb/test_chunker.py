@@ -213,6 +213,21 @@ def test_scope_flags(chunk_id: str, in_scope: bool, reason: str | None) -> None:
     assert (c.in_scope, c.scope_reason) == (in_scope, reason)
 
 
+def test_chunks_listed_in_exclude_chunks_are_excluded() -> None:
+    # R3-D1: a glossary term or Key Concepts section can belong to an excluded section
+    module = MODULE.model_copy(update={"exclude_chunks": ("d1", "kc")})
+    result = by_id(chunks(module=module))
+    assert result["m1:d1"].scope_reason == "excluded_section"
+    assert result["m1:kc"].scope_reason == "excluded_section"
+    assert result["m1:d2"].in_scope
+
+
+def test_exclude_chunk_that_matches_nothing_raises() -> None:
+    module = MODULE.model_copy(update={"exclude_chunks": ("d1", "gone")})
+    with pytest.raises(ValueError, match="gone"):
+        chunks(module=module)
+
+
 def test_module_out_flags_every_chunk() -> None:
     out = MODULE.model_copy(update={"scope": "out"})
     result = chunks(module=out)

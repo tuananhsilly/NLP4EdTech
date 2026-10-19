@@ -55,6 +55,24 @@ def test_module_marked_out_is_entirely_out_of_scope(chunks: list[Chunk]) -> None
     assert all(c.scope_reason == "module_out" for c in solve_equations)
 
 
+@pytest.mark.parametrize(
+    "chunk_id",
+    [
+        "m81287:fs-id4224324",  # complex fraction
+        "m81298:fs-id1883068",  # circumference of a circle
+        "m81298:fs-id2817472",  # diameter of a circle
+        "m81298:fs-id3230973",  # radius of a circle
+        "m81298:fs-id1389226",  # Key Concepts, half of it about circles
+    ],
+)
+def test_chunks_of_excluded_topics_outside_sections_are_out_of_scope(
+    chunks: list[Chunk], chunk_id: str
+) -> None:
+    # R3-D1: glossary terms and Key Concepts sit outside the sections listed in exclude_sections
+    chunk = next(c for c in chunks if c.id == chunk_id)
+    assert chunk.scope_reason == "excluded_section"
+
+
 def test_jsonl_round_trip(chunks: list[Chunk], tmp_path: Path) -> None:
     out = tmp_path / "chunks.jsonl"
     write_jsonl(chunks, out)

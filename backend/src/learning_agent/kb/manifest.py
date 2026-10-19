@@ -16,6 +16,9 @@ class ModuleEntry(BaseModel):
     title: str
     scope: Literal["in", "partial", "out"]
     exclude_sections: tuple[str, ...] = ()
+    # Element ids of chunks outside any section (glossary terms, Key Concepts) whose topic is
+    # excluded (R3-D1).
+    exclude_chunks: tuple[str, ...] = ()
     note: str | None = None
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
