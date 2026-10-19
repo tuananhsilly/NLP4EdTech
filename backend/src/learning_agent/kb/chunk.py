@@ -67,7 +67,7 @@ def report(chunks: list[Chunk], max_words: int) -> str:
     if in_scope:
         rows.append(
             f"in-scope words: median {statistics.median(in_scope):g}, max {max(in_scope)}, "
-            f"over {max_words}: {over} (worked examples are never split)"
+            f"over {max_words}: {over} (only theory is split)"
         )
     return "\n".join(rows)
 
