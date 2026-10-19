@@ -1,0 +1,14 @@
+# Runtime parameters of the backend (no model settings or thresholds in code).
+# Every ingest run stores this whole config and its hash in the ingest_run table.
+# Schema-level parameters (vector dimension of the column, HNSW m / ef_construction) live in
+# the SQL migrations instead, because changing them means a new migration.
+
+embedding:
+  model_id: BAAI/bge-m3                                  # R4-D1
+  revision: 5617a9f61b028005a4858fdac845db406aefb181     # pinned commit on Hugging Face
+  dim: 1024                     # must equal the chunk.embedding column (checked at ingest)
+  max_seq_length: 1024          # longest in-scope chunk: 612 tokens (R4, RV2)
+  batch_size: 16
+  device: auto                  # auto (cuda if available, else cpu) | cuda | cpu
+  fp16: true                    # half precision on cuda only
+  include_section_title: true   # embed "<section title>\n<text>" (R4-D3)
