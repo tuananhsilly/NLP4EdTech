@@ -11,6 +11,7 @@ from learning_agent.domain import load_skills
 from learning_agent.kb import store
 from learning_agent.kb.chunk import DEFAULT_MANIFEST, DEFAULT_SOURCES, build_chunks, source_dir
 from learning_agent.kb.chunker import Chunk
+from learning_agent.kb.embedder import HashEmbedder
 from learning_agent.kb.manifest import load_manifest
 from learning_agent.kb.skill_map import (
     DEFAULT_SKILL_MAP,
@@ -104,3 +105,38 @@ def test_real_chunks_load_and_full_text_search_finds_them(conn: store.Connection
     # the glossary definition spells the term out; worked examples often write only "LCD",
     # so R5 must expand glossary aliases in the query
     assert ("m81289:fs-id2483777",) in hits
+
+
+EMBEDDER = HashEmbedder(dim=1024)  # the dimension of the chunk.embedding column
+
+
+def test_stored_vectors_find_their_own_chunk(conn: store.Connection) -> None:
+    vectors = {c.id: EMBEDDER.embed_query(c.text) for c in CHUNKS if c.in_scope}
+    store.load(conn, SOURCE, SKILLS, CHUNKS, CHUNK_SKILLS, vectors)
+    assert store.embedding_dim(conn) == 1024
+    hits = store.nearest(conn, EMBEDDER.embed_query("Find the least common denominator"), 2)
+    assert hits[0][0] == "m1:p2"
+    assert hits[0][1] < 1e-5  # cosine distance of a vector to itself (stored as float32)
+
+
+def test_missing_embedding_is_rejected_before_writing(conn: store.Connection) -> None:
+    store.load(conn, SOURCE, SKILLS, CHUNKS, CHUNK_SKILLS)
+    with pytest.raises(ValueError, match="m1:p2"):
+        store.load(conn, SOURCE, SKILLS, CHUNKS, CHUNK_SKILLS, {"m1:p1": EMBEDDER.embed_query("x")})
+    assert chunk_ids(conn) == ["m1:p1", "m1:p2"]
+
+
+def test_ingest_run_keeps_config_and_stats_as_json(conn: store.Connection) -> None:
+    import datetime
+
+    run_id = store.record_ingest_run(
+        conn,
+        started_at=datetime.datetime.now(datetime.UTC),
+        source_ids=[SOURCE.id],
+        git_commit="abc",
+        config={"embedding": {"model_id": "hash"}},
+        config_hash="0" * 64,
+        stats={"chunks_stored": 2, "truncated": []},
+    )
+    row = conn.execute("SELECT config, stats FROM ingest_run WHERE id = %s", (run_id,)).fetchone()
+    assert row == ({"embedding": {"model_id": "hash"}}, {"chunks_stored": 2, "truncated": []})
