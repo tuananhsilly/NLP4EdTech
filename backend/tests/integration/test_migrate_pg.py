@@ -9,14 +9,35 @@ from learning_agent.db.migrate import migrate
 
 def test_first_run_creates_the_kb_tables_and_second_run_does_nothing(database_url: str) -> None:
     with connect(database_url) as conn:
-        assert [m.name for m in migrate(conn)] == ["0001_kb.sql"]
+        assert [m.name for m in migrate(conn)] == ["0001_kb.sql", "0002_embedding.sql"]
         assert migrate(conn) == []
         tables = conn.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
         ).fetchall()
         extension = conn.execute("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
-        assert {t for (t,) in tables} >= {"source_document", "skill", "chunk", "chunk_skill"}
+        assert {t for (t,) in tables} >= {
+            "source_document",
+            "skill",
+            "chunk",
+            "chunk_skill",
+            "ingest_run",
+        }
         assert extension.fetchone() is not None
+
+
+def test_embedding_column_has_the_model_dimension_and_an_hnsw_index(database_url: str) -> None:
+    with connect(database_url) as conn:
+        migrate(conn)
+        column_type = conn.execute(
+            "SELECT format_type(atttypid, atttypmod) FROM pg_attribute "
+            "WHERE attrelid = 'chunk'::regclass AND attname = 'embedding'"
+        ).fetchone()
+        index = conn.execute(
+            "SELECT indexdef FROM pg_indexes WHERE indexname = 'chunk_embedding_idx'"
+        ).fetchone()
+        assert column_type == ("vector(1024)",)
+        assert index is not None
+        assert "hnsw (embedding vector_cosine_ops)" in str(index[0])
 
 
 def test_tsv_is_generated_with_english_stemming(database_url: str) -> None:
