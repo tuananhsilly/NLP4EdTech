@@ -4,9 +4,12 @@ version = "0.1.0"
 description = "Adaptive fraction-practice learning agent (thesis prototype)"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "pgvector>=0.5.1",
     "psycopg[binary]>=3.3.6",
     "pydantic>=2.14.1",
     "pyyaml>=6.0.3",
+    "sentence-transformers>=6.1.0",
+    "torch>=2.14.1",
 ]
 
 [dependency-groups]
@@ -20,6 +23,16 @@ dev = [
 [build-system]
 requires = ["uv_build>=0.13.0,<0.14.0"]
 build-backend = "uv_build"
+
+# torch comes from PyTorch's CUDA 13.0 wheel index (the driver supports CUDA 13.2), never from
+# PyPI; `explicit` keeps every other package on PyPI.
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
 
 [tool.ruff]
 line-length = 100
