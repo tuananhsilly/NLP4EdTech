@@ -10,9 +10,11 @@ the ingest command records the run in the same transaction (see kb/ingest.py).
 import datetime
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Literal
 
 import psycopg
 from pgvector.psycopg import register_vector
+from psycopg import sql
 from psycopg.rows import TupleRow, class_row
 from psycopg.types.json import Jsonb
 
@@ -152,6 +154,94 @@ def nearest(conn: Connection, query: Vectors, k: int) -> list[tuple[str, float]]
         {"q": query, "k": k},
     ).fetchall()
     return [(str(chunk_id), float(distance)) for chunk_id, distance in rows]
+
+
+# Retrieval (R5). Filters apply inside each branch, before LIMIT: filtering the top-n afterwards
+# could leave nothing. Ties are broken by id so that a ranking is reproducible; on a KB this
+# small that makes the dense branch an exact scan instead of the approximate HNSW index.
+_FILTERS = """
+    AND (%(doc_type)s::text IS NULL OR c.doc_type = %(doc_type)s)
+    AND (%(skill_id)s::text IS NULL OR EXISTS (
+        SELECT 1 FROM chunk_skill cs WHERE cs.chunk_id = c.id AND cs.skill_id = %(skill_id)s))
+"""
+
+# OR of the query's lexemes. to_tsvector parses and stems the question exactly like chunk.tsv;
+# each lexeme is quoted for tsquery input (quotes and backslashes doubled) and cast with
+# ::tsquery, which does not stem again. A question with only stop words gives NULL: no match.
+_OR_QUERY = """
+    (SELECT string_agg('''' || replace(replace(lexeme, '\\', '\\\\'), '''', '''''') || '''', ' | ')
+     FROM unnest(to_tsvector('english', %(text)s)))::tsquery
+"""
+
+_RANK_FUNCTIONS = {"ts_rank": sql.SQL("ts_rank"), "ts_rank_cd": sql.SQL("ts_rank_cd")}
+
+
+@dataclass(frozen=True)
+class HitRow:
+    id: str
+    section_title: str
+    doc_type: str
+    text: str
+    skills: list[str]
+    source_title: str
+    license: str
+    attribution: str
+
+
+def dense_candidates(
+    conn: Connection,
+    query: Vectors,
+    n: int,
+    *,
+    skill_id: str | None = None,
+    doc_type: str | None = None,
+) -> list[tuple[str, float]]:
+    """Up to n chunks by cosine similarity to `query` (1 = same direction), highest first."""
+    register_vector(conn)
+    rows = conn.execute(
+        "SELECT c.id, 1 - (c.embedding <=> %(q)s) AS cosine FROM chunk c "
+        "WHERE c.embedding IS NOT NULL" + _FILTERS + "ORDER BY cosine DESC, c.id LIMIT %(n)s",
+        {"q": query, "n": n, "skill_id": skill_id, "doc_type": doc_type},
+    ).fetchall()
+    return [(str(chunk_id), float(cosine)) for chunk_id, cosine in rows]
+
+
+def lexical_candidates(
+    conn: Connection,
+    text: str,
+    n: int,
+    *,
+    rank: Literal["ts_rank", "ts_rank_cd"],
+    normalization: int,
+    skill_id: str | None = None,
+    doc_type: str | None = None,
+) -> list[tuple[str, float]]:
+    """Up to n chunks containing any word of `text` (full-text, stemmed), best rank first."""
+    query = sql.SQL(
+        "WITH q AS (SELECT " + _OR_QUERY + " AS query) "
+        "SELECT c.id, {rank}(c.tsv, q.query, %(norm)s::int) AS score FROM chunk c, q "
+        "WHERE c.tsv @@ q.query" + _FILTERS + "ORDER BY score DESC, c.id LIMIT %(n)s"
+    ).format(rank=_RANK_FUNCTIONS[rank])
+    rows = conn.execute(
+        query,
+        {"text": text, "norm": normalization, "n": n, "skill_id": skill_id, "doc_type": doc_type},
+    ).fetchall()
+    return [(str(chunk_id), float(score)) for chunk_id, score in rows]
+
+
+def get_hits(conn: Connection, chunk_ids: list[str]) -> dict[str, HitRow]:
+    """What a search result shows of each chunk, with its source's attribution (CC BY-NC-SA)."""
+    with conn.cursor(row_factory=class_row(HitRow)) as cur:
+        cur.execute(
+            "SELECT c.id, c.section_title, c.doc_type, c.text, "
+            "array_agg(cs.skill_id ORDER BY cs.skill_id) AS skills, "
+            "d.title AS source_title, d.license, d.attribution "
+            "FROM chunk c JOIN chunk_skill cs ON cs.chunk_id = c.id "
+            "JOIN source_document d ON d.id = c.source_id "
+            "WHERE c.id = ANY(%s) GROUP BY c.id, d.id",
+            (chunk_ids,),
+        )
+        return {row.id: row for row in cur.fetchall()}
 
 
 def record_ingest_run(
