@@ -3,10 +3,10 @@
 import hashlib
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "config" / "default.yaml"
 
@@ -28,10 +28,31 @@ class EmbeddingSettings(BaseModel):
     include_section_title: bool
 
 
+class RetrievalSettings(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    k: int = Field(gt=0)
+    candidates_per_branch: int = Field(gt=0)
+    rrf_k: int = Field(ge=0)
+    tau: float = Field(ge=-1.0, le=1.0)  # on the cosine similarity of the best dense hit
+    max_query_chars: int = Field(gt=0)
+    dense_query: Literal["a", "b", "c"]
+    branches: Literal["hybrid", "dense", "lexical"]
+    lexical_rank: Literal["ts_rank", "ts_rank_cd"]
+    lexical_normalization: int = Field(ge=0, le=63)  # Postgres bit mask: 1|2|4|8|16|32
+
+    @model_validator(mode="after")
+    def _k_fits_candidates(self) -> Self:
+        if self.k > self.candidates_per_branch:
+            raise ValueError(f"k ({self.k}) exceeds candidates_per_branch")
+        return self
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     embedding: EmbeddingSettings
+    retrieval: RetrievalSettings
 
     def config_hash(self) -> str:
         """Hash of the parsed values (not of the file text), so comments do not change it."""

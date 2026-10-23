@@ -12,3 +12,14 @@ embedding:
   device: auto                  # auto (cuda if available, else cpu) | cuda | cpu
   fp16: true                    # half precision on cuda only
   include_section_title: true   # embed "<section title>\n<text>" (R4-D3)
+
+retrieval:                      # R5, 07 §11
+  k: 5                          # chunks returned (context size for the answer, R8)
+  candidates_per_branch: 20     # top-n from each of the dense and lexical branches
+  rrf_k: 60                     # Reciprocal Rank Fusion: score = sum of 1 / (rrf_k + rank)
+  tau: 0.5                      # PROVISIONAL (R5-D6): refuse when the best dense cosine < tau
+  max_query_chars: 1000         # longer questions are rejected (R5-D8)
+  dense_query: b                # a: normalized query · b: + English terms · c: English terms only
+  branches: hybrid              # hybrid | dense | lexical (ablation, R6)
+  lexical_rank: ts_rank         # ts_rank | ts_rank_cd; R5 step 0: ts_rank with 1 ranks best
+  lexical_normalization: 1      # 1 = divide by 1 + log(document length)

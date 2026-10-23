@@ -9,6 +9,9 @@ def test_default_config_is_valid() -> None:
     settings = load_settings(DEFAULT_CONFIG)
     assert settings.embedding.model_id == "BAAI/bge-m3"
     assert settings.embedding.dim == 1024
+    assert settings.retrieval.dense_query == "b"  # R5-D2
+    assert settings.retrieval.branches == "hybrid"
+    assert settings.retrieval.k <= settings.retrieval.candidates_per_branch
 
 
 def test_env_var_selects_another_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -39,6 +42,14 @@ def test_hash_ignores_comments_but_not_values(tmp_path: Path) -> None:
         ("revision: 5617a9f61b028005a4858fdac845db406aefb181", "revision: main", "revision"),
         ("dim: 1024", "dim: 0", "dim"),
         ("fp16: true", "fp16: true\n  pooling: cls", "pooling"),
+        ("dense_query: b", "dense_query: d", "dense_query"),
+        ("branches: hybrid", "branches: both", "branches"),
+        ("lexical_rank: ts_rank", "lexical_rank: bm25", "lexical_rank"),
+        ("lexical_normalization: 1", "lexical_normalization: 64", "lexical_normalization"),
+        ("tau: 0.5", "tau: 1.5", "tau"),
+        ("max_query_chars: 1000", "max_query_chars: 0", "max_query_chars"),
+        ("\n  k: 5", "\n  k: 21", "candidates_per_branch"),
+        ("rrf_k: 60", "rrf_k: 60\n  rerank: true", "rerank"),
     ],
 )
 def test_invalid_values_are_rejected(tmp_path: Path, old: str, new: str, message: str) -> None:
