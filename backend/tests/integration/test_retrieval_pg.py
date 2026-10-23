@@ -4,18 +4,21 @@ HashEmbedder vectors carry no meaning: dense tests only use "a text finds its ow
 """
 
 from collections.abc import Iterator
+from typing import Any
 
 import pytest
 
+from learning_agent.config import RetrievalSettings
 from learning_agent.db import connect
 from learning_agent.db.migrate import migrate
-from learning_agent.domain import load_skills
+from learning_agent.domain import load_glossary, load_skills
 from learning_agent.kb import store
 from learning_agent.kb.chunk import DEFAULT_MANIFEST
 from learning_agent.kb.chunker import Chunk, DocType
 from learning_agent.kb.embedder import HashEmbedder
 from learning_agent.kb.manifest import load_manifest
-from learning_agent.kb.skill_map import DEFAULT_SKILLS
+from learning_agent.kb.retrieval import SearchResult, search
+from learning_agent.kb.skill_map import DEFAULT_GLOSSARY, DEFAULT_SKILLS
 
 SOURCE = load_manifest(DEFAULT_MANIFEST).sources[0]
 SKILLS = load_skills(DEFAULT_SKILLS)
@@ -181,3 +184,110 @@ def test_get_hits_returns_chunk_skills_and_attribution(conn: store.Connection) -
 
 def test_get_hits_of_nothing_is_empty(conn: store.Connection) -> None:
     assert store.get_hits(conn, []) == {}
+
+
+# --- search: query preparation + both branches + RRF + threshold (R5) --------------------
+
+GLOSSARY = load_glossary(DEFAULT_GLOSSARY)
+SETTINGS = RetrievalSettings(
+    k=3,
+    candidates_per_branch=20,
+    rrf_k=60,
+    tau=0.5,
+    max_query_chars=1000,
+    dense_query="a",  # the question is embedded as is, so a chunk's own text finds it
+    branches="hybrid",
+    lexical_rank="ts_rank",
+    lexical_normalization=1,
+)
+UNRELATED = "Thủ đô của Pháp là gì?"
+
+
+def run(conn: store.Connection, text: str, **options: Any) -> SearchResult:
+    return search(conn, EMBEDDER, GLOSSARY, SKILLS, SETTINGS, text, **options)
+
+
+def test_search_fuses_both_branches_and_keeps_their_ranks(conn: store.Connection) -> None:
+    result = run(conn, TEXT["m1:mul"])
+    assert not result.refused
+    assert result.top_cosine == pytest.approx(1.0, abs=1e-5)
+    best = result.hits[0]
+    assert best.chunk_id == "m1:mul"
+    assert (best.dense_rank, best.lexical_rank) == (1, 1)
+    assert best.dense_cosine == pytest.approx(1.0, abs=1e-5)
+    assert best.lexical_score is not None and best.lexical_score > 0
+    assert best.rrf_score == pytest.approx(2 / 61)
+    assert len(result.hits) == SETTINGS.k
+    assert [h.rrf_score for h in result.hits] == sorted(
+        (h.rrf_score for h in result.hits), reverse=True
+    )
+
+
+def test_search_hits_carry_attribution(conn: store.Connection) -> None:
+    for hit in run(conn, TEXT["m1:add"]).hits:
+        assert hit.source_title and hit.license and hit.attribution
+        assert hit.skills
+
+
+def test_search_below_threshold_refuses_with_no_hits(conn: store.Connection) -> None:
+    result = run(conn, UNRELATED)
+    assert result.refused
+    assert result.hits == []
+    assert result.top_cosine is not None and result.top_cosine < SETTINGS.tau
+    assert result.tau == SETTINGS.tau
+
+
+def test_search_threshold_can_be_turned_off(conn: store.Connection) -> None:
+    result = run(conn, UNRELATED, apply_threshold=False)
+    assert not result.refused
+    assert len(result.hits) == SETTINGS.k
+
+
+def test_search_refuses_when_filters_leave_no_chunk(conn: store.Connection) -> None:
+    result = run(conn, TEXT["m1:mul"], doc_type="procedure")
+    assert result.refused
+    assert result.top_cosine is None
+
+
+def test_search_expands_vietnamese_terms_to_reach_english_only_chunks(
+    conn: store.Connection,
+) -> None:
+    # m1:lcd writes only "LCD"; the Vietnamese question shares no word with it.
+    result = run(conn, "mẫu số chung bé nhất là gì?", branches="lexical", apply_threshold=False)
+    assert result.query.en_terms == ("least common denominator", "LCD")
+    assert "m1:lcd" in [h.chunk_id for h in result.hits]
+
+
+def test_search_single_branch_modes(conn: store.Connection) -> None:
+    dense_only = run(conn, TEXT["m1:mul"], branches="dense")
+    assert all(h.lexical_rank is None for h in dense_only.hits)
+    lexical_only = run(conn, TEXT["m1:mul"], branches="lexical")
+    assert all(h.dense_rank is None for h in lexical_only.hits)
+    # the threshold still uses the dense branch (R5-D1)
+    assert lexical_only.top_cosine == pytest.approx(1.0, abs=1e-5)
+
+
+def test_search_options_override_settings(conn: store.Connection) -> None:
+    # Mode c embeds only the English terms, which HashEmbedder cannot relate to the chunk
+    # text, so the threshold is off here; the test checks that each option took effect.
+    result = run(
+        conn, TEXT["m1:mul"], k=1, dense_mode="c", skill_id="frac.mul", apply_threshold=False
+    )
+    assert result.query.dense_text == " ".join(result.query.en_terms)
+    assert [h.chunk_id for h in result.hits] == ["m1:mul"]
+    assert len(run(conn, UNRELATED, k=1, apply_threshold=False).hits) == 1  # k without filters
+
+
+@pytest.mark.parametrize(
+    ("options", "message"),
+    [
+        ({"skill_id": "frac.unknown"}, "frac.unknown"),
+        ({"doc_type": "exercise"}, "exercise"),
+        ({"k": 0}, "k"),
+    ],
+)
+def test_search_rejects_unknown_filters(
+    conn: store.Connection, options: dict[str, Any], message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        run(conn, TEXT["m1:mul"], **options)
