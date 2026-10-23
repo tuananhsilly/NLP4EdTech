@@ -17,7 +17,8 @@ retrieval:                      # R5, 07 §11
   k: 5                          # chunks returned (context size for the answer, R8)
   candidates_per_branch: 20     # top-n from each of the dense and lexical branches
   rrf_k: 60                     # Reciprocal Rank Fusion: score = sum of 1 / (rrf_k + rank)
-  tau: 0.5                      # PROVISIONAL (R5-D6): refuse when the best dense cosine < tau
+  tau: 0.56                     # PROVISIONAL (R5-D6): refuse when the best dense cosine < tau;
+                                # midpoint of 10 probes (in-scope min 0.593, out-of-scope max 0.532)
   max_query_chars: 1000         # longer questions are rejected (R5-D8)
   dense_query: b                # a: normalized query · b: + English terms · c: English terms only
   branches: hybrid              # hybrid | dense | lexical (ablation, R6)

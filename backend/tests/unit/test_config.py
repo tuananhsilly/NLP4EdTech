@@ -46,7 +46,7 @@ def test_hash_ignores_comments_but_not_values(tmp_path: Path) -> None:
         ("branches: hybrid", "branches: both", "branches"),
         ("lexical_rank: ts_rank", "lexical_rank: bm25", "lexical_rank"),
         ("lexical_normalization: 1", "lexical_normalization: 64", "lexical_normalization"),
-        ("tau: 0.5", "tau: 1.5", "tau"),
+        ("  tau: ", "  tau: 1.5  # ", "tau"),  # independent of the provisional value
         ("max_query_chars: 1000", "max_query_chars: 0", "max_query_chars"),
         ("\n  k: 5", "\n  k: 21", "candidates_per_branch"),
         ("rrf_k: 60", "rrf_k: 60\n  rerank: true", "rerank"),
