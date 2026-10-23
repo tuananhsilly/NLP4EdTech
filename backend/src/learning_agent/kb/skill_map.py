@@ -17,6 +17,7 @@ from learning_agent.kb.chunker import Chunk
 
 DEFAULT_SKILL_MAP = REPO_ROOT / "data" / "section_skills.yaml"
 DEFAULT_SKILLS = REPO_ROOT / "data" / "curriculum" / "skills.yaml"
+DEFAULT_GLOSSARY = REPO_ROOT / "data" / "curriculum" / "glossary.yaml"
 Skills = Annotated[tuple[SkillId, ...], Field(min_length=1)]
 
 
