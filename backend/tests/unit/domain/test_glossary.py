@@ -33,6 +33,8 @@ LCD = GlossaryTerm(
     noncanonical_vi=("mẫu số chung bé nhất",),
     skill_id="frac.mixed",
 )
+DENOMINATOR = GlossaryTerm(en="denominator", vi="mẫu số")
+COMMON_DEN = GlossaryTerm(en="common denominator", vi="mẫu số chung")
 
 
 def graph() -> SkillGraph:
@@ -134,6 +136,56 @@ def test_normalize_handles_decomposed_unicode_input() -> None:
     glossary = Glossary([EQUIVALENT])
     text_nfd = unicodedata.normalize("NFD", "hai phân số tương đương")
     assert glossary.normalize(text_nfd) == "hai phân số bằng nhau"
+
+
+# --- terms in free text (query expansion, R5) --------------------------------------------
+
+
+def test_terms_found_prefers_the_longest_phrase() -> None:
+    # "mẫu số chung nhỏ nhất" contains "mẫu số chung" and "mẫu số": only the longest counts.
+    glossary = Glossary([DENOMINATOR, COMMON_DEN, LCD])
+    found = glossary.terms_found("Tìm mẫu số chung nhỏ nhất của hai mẫu số.")
+    assert found == [LCD, DENOMINATOR]
+
+
+def test_terms_found_matches_whole_words_only() -> None:
+    glossary = Glossary([DENOMINATOR, FRACTION])
+    assert glossary.terms_found("mẫu sốx, xphân số, fractional") == []
+
+
+def test_terms_found_ignores_case_and_unicode_normalization_form() -> None:
+    glossary = Glossary([LCD])
+    text_nfd = unicodedata.normalize("NFD", "MẪU SỐ CHUNG NHỎ NHẤT là gì?")
+    assert glossary.terms_found(text_nfd) == [LCD]
+
+
+def test_terms_found_matches_english_terms_aliases_and_plurals() -> None:
+    glossary = Glossary([FRACTION, DENOMINATOR, LCD])
+    found = glossary.terms_found("How do I find the lcd of fractions with unlike denominators?")
+    assert found == [LCD, FRACTION, DENOMINATOR]
+    assert glossary.terms_found("Least Common Denominators") == [LCD]
+
+
+def test_terms_found_skips_variants_until_normalized() -> None:
+    # Non-canonical and forbidden wordings are not terms; normalize() first, then search.
+    glossary = Glossary([LCD, RECIPROCAL])
+    text = "Tìm mẫu số chung bé nhất, rồi lấy số đối."
+    assert glossary.terms_found(text) == []
+    assert glossary.terms_found(glossary.normalize(text)) == [LCD]
+
+
+def test_terms_found_keeps_first_appearance_order_without_duplicates() -> None:
+    glossary = Glossary([FRACTION, LCD])
+    found = glossary.terms_found("phân số, LCD, fraction, mẫu số chung nhỏ nhất, phân số")
+    assert found == [FRACTION, LCD]
+    # English before Vietnamese: order follows the text, not the language searched first.
+    assert glossary.terms_found("LCD của hai phân số") == [LCD, FRACTION]
+
+
+def test_terms_found_on_real_glossary_after_normalize() -> None:
+    glossary = load_glossary(CURRICULUM / "glossary.yaml")
+    query = glossary.normalize("Làm sao tìm mẫu số chung bé nhất của hai phân số?")
+    assert [t.en for t in glossary.terms_found(query)] == ["least common denominator", "fraction"]
 
 
 # --- invariants of a one-to-one mapping (ADR-15) -----------------------------------------

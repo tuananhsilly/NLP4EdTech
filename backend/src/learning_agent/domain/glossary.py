@@ -42,17 +42,21 @@ def _key(text: str) -> str:
     return unicodedata.normalize("NFC", text).casefold()
 
 
-def _phrases_regex(phrases: Iterable[str]) -> re.Pattern[str] | None:
+_EN_PLURAL = r"(?:e?s)?"  # "denominators", "boxes": English terms are matched with their plural
+
+
+def _phrases_regex(phrases: Iterable[str], suffix: str = "") -> re.Pattern[str] | None:
     """One regex matching any of `phrases` as a whole phrase, case-insensitively.
 
     (?<!\\w) / (?!\\w) stop a match inside a longer word; \\w is Unicode-aware, so Vietnamese
     letters with diacritics count. Longer phrases come first so they win over their prefixes.
+    An optional `suffix` pattern may follow the phrase; group "phrase" is the phrase without it.
     """
     alternatives = sorted({unicodedata.normalize("NFC", p) for p in phrases}, key=len, reverse=True)
     if not alternatives:
         return None
     body = "|".join(re.escape(p) for p in alternatives)
-    return re.compile(rf"(?<!\w)(?:{body})(?!\w)", re.IGNORECASE)
+    return re.compile(rf"(?<!\w)(?P<phrase>{body}){suffix}(?!\w)", re.IGNORECASE)
 
 
 class Glossary:
@@ -91,6 +95,10 @@ class Glossary:
 
         self._forbidden_re = _phrases_regex(phrase for phrase, _ in self._forbidden)
         self._noncanonical_re = _phrases_regex(self._noncanonical)
+        self._vi_re = _phrases_regex(term.vi for term in self._terms)
+        self._en_re = _phrases_regex(
+            (en for term in self._terms for en in (term.en, *term.en_aliases)), _EN_PLURAL
+        )
 
     def __len__(self) -> int:
         return len(self._terms)
@@ -128,6 +136,26 @@ class Glossary:
             for phrase in term.noncanonical_vi
             if _key(phrase) in found
         ]
+
+    def terms_found(self, text: str) -> list[GlossaryTerm]:
+        """Terms whose canonical Vietnamese, English term or alias occurs in `text`.
+
+        In order of first appearance, without duplicates. English matches accept a plural
+        ending. Only canonical wordings count: call `normalize()` first so that non-canonical
+        Vietnamese becomes canonical; forbidden phrases are never terms.
+        """
+        text = unicodedata.normalize("NFC", text)
+        matches: list[tuple[int, GlossaryTerm]] = []
+        for pattern, by_key in ((self._vi_re, self._by_vi), (self._en_re, self._by_en)):
+            if pattern is not None:
+                matches.extend(
+                    (m.start(), by_key[_key(m.group("phrase"))]) for m in pattern.finditer(text)
+                )
+        found: list[GlossaryTerm] = []
+        for _, term in sorted(matches, key=lambda pair: pair[0]):
+            if term not in found:
+                found.append(term)
+        return found
 
     def normalize(self, text_vi: str) -> str:
         """Return `text_vi` (as NFC) with every non-canonical phrase replaced by its canonical term.
